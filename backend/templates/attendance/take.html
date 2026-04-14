@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %} — Attendance{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ group.name }}</h1>
+    <div style="color:#64748b;font-size:14px;margin-top:4px;">📅 {{ today }}</div>
+  </div>
+  <a href="/groups/{{ group.id }}/" class="btn btn-ghost">← Back</a>
+</div>
+
+{% if not students %}
+<div class="card" style="padding:48px;text-align:center;">
+  <div style="font-size:36px;margin-bottom:12px;">👥</div>
+  <div style="font-weight:600;color:#1a202c;margin-bottom:8px;">No students in this group</div>
+  <div style="color:#64748b;font-size:14px;margin-bottom:20px;">Add students to the group first.</div>
+  <a href="/groups/{{ group.id }}/" class="btn btn-primary">Go to Group</a>
+</div>
+{% else %}
+<form method="post">
+  {% csrf_token %}
+  <div class="card" style="margin-bottom:20px;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th style="width:60px;">#</th>
+          <th>Student</th>
+          <th>Parent</th>
+          <th style="width:200px;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td style="color:#94a3b8;font-weight:500;">{{ forloop.counter }}</td>
+          <td>
+            <div style="font-weight:600;color:#1a202c;">{{ student.full_name }}</div>
+          </td>
+          <td style="color:#64748b;font-size:13px;">
+            {% if student.parent %}
+              {{ student.parent.full_name }}
+              {% if student.parent.telegram_id %}
+                <span style="color:#10b981;font-size:11px;"> ✓ bot</span>
+              {% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <select name="student_{{ student.id }}" class="input" style="padding:7px 10px;"
+              onchange="this.style.background=this.value==='present'?'#d1fae5':this.value==='absent'?'#fee2e2':'#fef3c7'">
+              <option value="present" {% if existing_map|default:'' %}{% if existing_map.student.id == student.id and existing_map.student.id == 'present' %}selected{% endif %}{% endif %}>✅ Present</option>
+              <option value="absent">❌ Absent</option>
+              <option value="late">⏰ Late</option>
+            </select>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;gap:12px;align-items:center;">
+    <button type="submit" class="btn btn-success" style="padding:12px 32px;font-size:15px;">
+      💾 Save & Send Notifications
+    </button>
+    <div style="font-size:13px;color:#94a3b8;">
+      Parents with linked Telegram will receive a message instantly.
+    </div>
+  </div>
+</form>
+
+<script>
+// Color selects on load
+document.querySelectorAll("select").forEach(s => {
+  s.dispatchEvent(new Event("change"));
+});
+</script>
+{% endif %}
+{% endblock %}

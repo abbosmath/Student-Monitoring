@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %} — Students{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Students</h1>
+  <a href="/students/create/" class="btn btn-primary">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+    New Student
+  </a>
+</div>
+
+{% if students %}
+<div class="card">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Student</th>
+        <th>Parent</th>
+        <th>Telegram</th>
+        <th>Points</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for student in students %}
+      <tr>
+        <td>
+          <a href="/students/{{ student.id }}/" style="font-weight:600;color:#1a202c;text-decoration:none;">
+            {{ student.full_name }}
+          </a>
+        </td>
+        <td style="color:#64748b;">
+          {% if student.parent %}{{ student.parent.full_name }}{% else %}—{% endif %}
+        </td>
+        <td>
+          {% if student.parent and student.parent.telegram_id %}
+            <span style="background:#d1fae5;color:#065f46;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;">✓ Linked</span>
+          {% else %}
+            <span style="background:#f1f5f9;color:#94a3b8;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;">Not linked</span>
+          {% endif %}
+        </td>
+        <td>
+          <span style="font-weight:700;color:#6366f1;">{{ student.total_points }}</span>
+          <span style="color:#94a3b8;font-size:12px;"> pts</span>
+        </td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <a href="/students/{{ student.id }}/" class="btn btn-ghost" style="font-size:12px;padding:5px 12px;">View</a>
+            <a href="/students/{{ student.id }}/points/" class="btn btn-warning" style="font-size:12px;padding:5px 12px;">+ Points</a>
+            <a href="/students/{{ student.id }}/edit/" class="btn btn-ghost" style="font-size:12px;padding:5px 12px;">Edit</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card" style="padding:60px;text-align:center;">
+  <div style="font-size:48px;margin-bottom:16px;">🎒</div>
+  <div style="font-size:18px;font-weight:600;color:#1a202c;margin-bottom:8px;">No students yet</div>
+  <div style="color:#64748b;font-size:14px;margin-bottom:24px;">Add students then assign them to groups.</div>
+  <a href="/students/create/" class="btn btn-primary">Add First Student</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %} — New Student{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">New Student</h1>
+  <a href="/students/" class="btn btn-ghost">← Back</a>
+</div>
+
+<div class="card" style="max-width:480px;padding:32px;">
+  <form method="post">
+    {% csrf_token %}
+    <div style="margin-bottom:20px;">
+      <label class="label">Student Full Name *</label>
+      <input name="full_name" type="text" class="input" placeholder="e.g. Abdulaziz Ravshanovich" required autofocus>
+    </div>
+
+    <div style="margin-bottom:8px;margin-top:8px;padding-top:20px;border-top:1px solid #f1f5f9;">
+      <div style="font-size:15px;font-weight:700;color:#1a202c;margin-bottom:4px;">Parent Info</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:16px;">
+        Parent must send <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;">/start</code> to the bot to link their Telegram account.
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <label class="label">Parent Full Name *</label>
+      <input name="parent_name" type="text" class="input" placeholder="e.g. Ravshan Axmadaliyev" required>
+    </div>
+    <div style="margin-bottom:28px;">
+      <label class="label">Phone Number</label>
+      <input name="parent_phone" type="text" class="input" placeholder="+998 90 123 45 67">
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;">
+      Create Student
+    </button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %} — Groups{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Groups</h1>
+  <a href="/groups/create/" class="btn btn-primary">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+    </svg>
+    New Group
+  </a>
+</div>
+
+{% if groups %}
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+  {% for group in groups %}
+  <div class="card" style="padding:24px;transition:box-shadow 0.15s;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+      <div>
+        <div style="font-size:17px;font-weight:700;color:#1a202c;">{{ group.name }}</div>
+        {% if group.subject %}
+        <div style="font-size:13px;color:#64748b;margin-top:2px;">{{ group.subject }}</div>
+        {% endif %}
+      </div>
+      <span style="background:#ede9fe;color:#6d28d9;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;">
+        {{ group.student_count }} students
+      </span>
+    </div>
+
+    {% if group.schedules.all %}
+    <div style="margin-bottom:16px;">
+      {% for sched in group.schedules.all %}
+      <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#64748b;margin-bottom:4px;">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        {{ sched.day_name }} · {{ sched.start_time|time:"H:i" }} – {{ sched.end_time|time:"H:i" }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="/groups/{{ group.id }}/" class="btn btn-ghost" style="font-size:13px;padding:7px 14px;">View</a>
+      <a href="/attendance/{{ group.id }}/" class="btn btn-primary" style="font-size:13px;padding:7px 14px;">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Attendance
+      </a>
+      <a href="/attendance/{{ group.id }}/history/" class="btn btn-ghost" style="font-size:13px;padding:7px 14px;">History</a>
+      <a href="/groups/{{ group.id }}/edit/" class="btn btn-ghost" style="font-size:13px;padding:7px 14px;">Edit</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="card" style="padding:60px;text-align:center;">
+  <div style="font-size:48px;margin-bottom:16px;">📚</div>
+  <div style="font-size:18px;font-weight:600;color:#1a202c;margin-bottom:8px;">No groups yet</div>
+  <div style="color:#64748b;font-size:14px;margin-bottom:24px;">Create your first group to start tracking attendance.</div>
+  <a href="/groups/create/" class="btn btn-primary">Create Group</a>
+</div>
+{% endif %}
+{% endblock %}

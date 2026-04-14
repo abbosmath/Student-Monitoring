@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %} — Edit {{ group.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1 class="page-title">Edit Group</h1>
+  <a href="/groups/{{ group.id }}/" class="btn btn-ghost">← Back</a>
+</div>
+
+<div class="card" style="max-width:560px;padding:32px;">
+  <form method="post">
+    {% csrf_token %}
+    <div style="margin-bottom:20px;">
+      <label class="label">Group Name *</label>
+      <input name="name" type="text" class="input" value="{{ group.name }}" required>
+    </div>
+    <div style="margin-bottom:28px;">
+      <label class="label">Subject</label>
+      <input name="subject" type="text" class="input" value="{{ group.subject }}">
+    </div>
+
+    <div style="margin-bottom:8px;">
+      <div style="font-size:15px;font-weight:700;color:#1a202c;margin-bottom:4px;">Schedule</div>
+      <div style="font-size:13px;color:#64748b;margin-bottom:16px;">All existing schedules will be replaced.</div>
+    </div>
+
+    <div id="schedules">
+      {% for sched in group.schedules.all %}
+      <div class="schedule-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:12px;">
+        <div>
+          <label class="label">Day</label>
+          <select name="day" class="input">
+            {% for val, label in sched.DAYS %}
+            <option value="{{ val }}" {% if sched.day_of_week == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="label">Start</label>
+          <input name="start_time" type="time" class="input" value="{{ sched.start_time|time:'H:i' }}">
+        </div>
+        <div>
+          <label class="label">End</label>
+          <input name="end_time" type="time" class="input" value="{{ sched.end_time|time:'H:i' }}">
+        </div>
+        <div style="padding-bottom:1px;">
+          <button type="button" onclick="removeRow(this)" style="background:#fee2e2;color:#991b1b;border:none;border-radius:8px;padding:10px 12px;cursor:pointer;font-size:16px;">×</button>
+        </div>
+      </div>
+      {% empty %}
+      <div class="schedule-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:12px;">
+        <div>
+          <label class="label">Day</label>
+          <select name="day" class="input">
+            <option value="0">Monday</option><option value="1">Tuesday</option><option value="2">Wednesday</option>
+            <option value="3">Thursday</option><option value="4">Friday</option><option value="5">Saturday</option><option value="6">Sunday</option>
+          </select>
+        </div>
+        <div><label class="label">Start</label><input name="start_time" type="time" class="input" value="12:00"></div>
+        <div><label class="label">End</label><input name="end_time" type="time" class="input" value="13:20"></div>
+        <div style="padding-bottom:1px;"><button type="button" onclick="removeRow(this)" style="background:#fee2e2;color:#991b1b;border:none;border-radius:8px;padding:10px 12px;cursor:pointer;font-size:16px;">×</button></div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <button type="button" onclick="addRow()" style="background:#f1f5f9;border:1px dashed #cbd5e1;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;color:#64748b;cursor:pointer;width:100%;margin-bottom:28px;">+ Add another day</button>
+
+    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;">Save Changes</button>
+  </form>
+</div>
+
+<script>
+const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+function addRow() {
+  const c = document.getElementById("schedules");
+  const html = `<div class="schedule-row" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:12px;">
+    <div><label class="label">Day</label><select name="day" class="input">${DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join("")}</select></div>
+    <div><label class="label">Start</label><input name="start_time" type="time" class="input" value="12:00"></div>
+    <div><label class="label">End</label><input name="end_time" type="time" class="input" value="13:20"></div>
+    <div style="padding-bottom:1px;"><button type="button" onclick="removeRow(this)" style="background:#fee2e2;color:#991b1b;border:none;border-radius:8px;padding:10px 12px;cursor:pointer;font-size:16px;">×</button></div>
+  </div>`;
+  c.insertAdjacentHTML("beforeend", html);
+}
+function removeRow(btn) {
+  if (document.querySelectorAll(".schedule-row").length > 1) btn.closest(".schedule-row").remove();
+}
+</script>
+{% endblock %}
