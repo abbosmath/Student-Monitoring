@@ -120,8 +120,13 @@ async def cmd_help(message: Message):
 
 
 async def main():
-    print("🤖 Bot ishga tushdi...")
-    await dp.start_polling(bot, allowed_updates=["message"])
+    while True:
+        try:
+            print("🤖 Bot ishga tushdi...")
+            await dp.start_polling(bot, allowed_updates=["message"])
+        except Exception as e:
+            print(f"Bot crashed: {e}")
+            await asyncio.sleep(5)
 
 
 if __name__ == "__main__":
