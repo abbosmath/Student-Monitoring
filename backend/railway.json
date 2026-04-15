@@ -1,8 +1,5 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
-  "build": {
-    "builder": "NIXPACKS"
-  },
   "deploy": {
     "startCommand": "python manage.py migrate && python bot/bot.py & python -m gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 1",
     "restartPolicyType": "ON_FAILURE"
