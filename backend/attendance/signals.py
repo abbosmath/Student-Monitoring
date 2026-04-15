@@ -1,71 +1,89 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import Attendance
+from .models import Attendance, Performance
 import threading
 
 
-def _notify(student, group, attendance_date, status):
-    """Run in a thread so it doesn't block the web request."""
+def _notify(telegram_id, text):
     try:
-        parent = student.parent
-        if not parent or not parent.telegram_id:
-            return
-
-        schedules = group.schedules.all()
-        start = schedules[0].start_time.strftime("%H:%M") if schedules else "—"
-        end = schedules[0].end_time.strftime("%H:%M") if schedules else "—"
-
-        # Format date in Uzbek style
-        months_uz = {
-            1: "Yanvar", 2: "Fevral", 3: "Mart", 4: "Aprel",
-            5: "May", 6: "Iyun", 7: "Iyul", 8: "Avgust",
-            9: "Sentabr", 10: "Oktabr", 11: "Noyabr", 12: "Dekabr",
-        }
-        date_str = f"{attendance_date.day}-{months_uz[attendance_date.month]} {attendance_date.year}"
-
-        if status == "present":
-            emoji = "🟢"
-            action = "qatnashdi"
-            extra = f"Dars {start} - {end} oralig'ida o'tkazildi.\n\nBiz sizning bilim olishdagi qat'iyatingiz va ishtiyoqingizni yuqori baholaymiz."
-        elif status == "late":
-            emoji = "🟡"
-            action = "kechikib keldi"
-            extra = f"Dars {start} - {end} oralig'ida o'tkazildi."
-        else:
-            emoji = "🔴"
-            action = "qatnashmadi"
-            extra = "Iltimos, sababini o'qituvchi bilan muhokama qiling."
-
-        teacher_name = group.teacher.full_name or group.teacher.user.username
-
-        text = (
-            f"{emoji} Hurmatli {parent.full_name.upper()},\n\n"
-            f"Farzandingiz {student.full_name}\n"
-            f"📚 {group.name} fanidan\n"
-            f"📅 {date_str} sanasidagi darsga {action}.\n"
-            f"⏰ {extra}\n\n"
-            f"Hurmat bilan,\n"
-            f"Fan mentori {teacher_name}"
-        )
-
         import asyncio
         from notifications.services import send_message
-
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        loop.run_until_complete(send_message(parent.telegram_id, text))
+        loop.run_until_complete(send_message(telegram_id, text))
         loop.close()
-
     except Exception as e:
         print(f"[Notification error] {e}")
 
 
 @receiver(post_save, sender=Attendance)
 def send_attendance_notification(sender, instance, created, **kwargs):
-    if created:
-        t = threading.Thread(
-            target=_notify,
-            args=(instance.student, instance.group, instance.date, instance.status),
-            daemon=True,
-        )
-        t.start()
+    if not created:
+        return
+    student = instance.student
+    parent = student.parent
+    if not parent or not parent.telegram_id:
+        return
+
+    group = instance.group
+    schedules = group.schedules.all()
+    start = schedules[0].start_time.strftime("%H:%M") if schedules else "—"
+    end = schedules[0].end_time.strftime("%H:%M") if schedules else "—"
+
+    months_uz = {
+        1:"Yanvar",2:"Fevral",3:"Mart",4:"Aprel",
+        5:"May",6:"Iyun",7:"Iyul",8:"Avgust",
+        9:"Sentabr",10:"Oktabr",11:"Noyabr",12:"Dekabr",
+    }
+    date_str = f"{instance.date.day}-{months_uz[instance.date.month]} {instance.date.year}"
+    teacher_name = group.teacher.full_name or group.teacher.user.username
+
+    if instance.status == "present":
+        emoji = "🟢"
+        action = "qatnashdi"
+        extra = f"Dars {start} - {end} oralig'ida o'tkazildi.\n\nBiz sizning bilim olishdagi qat'iyatingiz va ishtiyoqingizni yuqori baholaymiz."
+    elif instance.status == "late":
+        emoji = "🟡"
+        action = "kechikib keldi"
+        extra = f"Dars {start} - {end} oralig'ida o'tkazildi."
+    else:
+        emoji = "🔴"
+        action = "qatnashmadi"
+        extra = "Iltimos, sababini o'qituvchi bilan muhokama qiling."
+
+    text = (
+        f"{emoji} Hurmatli {parent.full_name.upper()},\n\n"
+        f"Farzandingiz {student.full_name}\n"
+        f"📚 {group.name} fanidan\n"
+        f"📅 {date_str} sanasidagi darsga {action}.\n"
+        f"⏰ {extra}\n\n"
+        f"Hurmat bilan,\n"
+        f"Fan mentori {teacher_name}"
+    )
+
+    threading.Thread(target=_notify, args=(parent.telegram_id, text), daemon=True).start()
+
+
+@receiver(post_save, sender=Performance)
+def send_points_notification(sender, instance, created, **kwargs):
+    if not created:
+        return
+    student = instance.student
+    parent = student.parent
+    if not parent or not parent.telegram_id:
+        return
+
+    teacher_name = instance.teacher.full_name if instance.teacher else "O'qituvchi"
+    comment_line = f"\n💬 Izoh: {instance.comment}" if instance.comment else ""
+
+    text = (
+        f"⭐ Hurmatli {parent.full_name.upper()},\n\n"
+        f"Farzandingiz {student.full_name}\n"
+        f"📅 {instance.date} sanasida\n"
+        f"🏆 <b>{instance.points} ball</b> oldi!{comment_line}\n\n"
+        f"Jami ball: <b>{student.total_points}</b>\n\n"
+        f"Hurmat bilan,\n"
+        f"Fan mentori {teacher_name}"
+    )
+
+    threading.Thread(target=_notify, args=(parent.telegram_id, text), daemon=True).start()

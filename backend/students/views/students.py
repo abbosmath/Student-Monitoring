@@ -1,9 +1,31 @@
+import threading
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from students.models import Student, GroupMembership
 from users.models import Parent
 from datetime import date
 
+import threading
+
+def _send_linked_notification(telegram_id, student_name):
+    try:
+        import asyncio
+        from notifications.services import send_message
+        text = (
+            f"✅ <b>Muvaffaqiyatli bog'landi!</b>\n\n"
+            f"Siz <b>{student_name}</b> ning ota-onasi sifatida tizimga ulangansiz.\n\n"
+            f"Endi quyidagi xabarnomalarni olasiz:\n"
+            f"📋 Davomat — darsga qatnashganda\n"
+            f"⭐ Ballar — o'qituvchi ball berganda\n\n"
+            f"Farzandingiz muvaffaqiyatlarini kuzatib boring! 🎓"
+        )
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(send_message(telegram_id, text))
+        loop.close()
+    except Exception as e:
+        print(f"[Link notification error] {e}")
 
 @login_required
 def students_list(request):
@@ -73,6 +95,12 @@ def student_edit(request, student_id):
                     error = "Telegram ID must be a number only"
 
             if not error:
+                # Notify parent that they are now linked
+                threading.Thread(
+                    target=_send_linked_notification,
+                    args=(telegram_id, student.full_name),
+                    daemon=True
+                ).start()
                 student.parent.save()
                 return redirect("student_detail", student_id=student.id)
         else:
