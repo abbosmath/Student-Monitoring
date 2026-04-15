@@ -1,7 +1,7 @@
 """
 Standalone Telegram bot process.
 Run with: python bot/bot.py
-On Railway this runs as a separate process via Procfile.
+On Railway this runs as a separate process via ProcFile.txt.
 """
 import asyncio
 import sys
