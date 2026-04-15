@@ -48,16 +48,37 @@ def student_detail(request, student_id):
 @login_required
 def student_edit(request, student_id):
     student = get_object_or_404(Student, id=student_id)
+    error = None
+
     if request.method == "POST":
         student.full_name = request.POST.get("full_name")
         student.save()
+
         if student.parent:
             student.parent.full_name = request.POST.get("parent_name", "")
             student.parent.phone = request.POST.get("parent_phone", "")
-            student.parent.save()
-        return redirect("student_detail", student_id=student.id)
-    return render(request, "students/edit.html", {"student": student})
 
+            telegram_id_raw = request.POST.get("telegram_id", "").strip()
+            if telegram_id_raw:
+                try:
+                    telegram_id = int(telegram_id_raw)
+                    conflict = Parent.objects.filter(
+                        telegram_id=telegram_id
+                    ).exclude(id=student.parent.id).first()
+                    if conflict:
+                        error = f"This Telegram ID is already linked to: {conflict.full_name}"
+                    else:
+                        student.parent.telegram_id = telegram_id
+                except ValueError:
+                    error = "Telegram ID must be a number only"
+
+            if not error:
+                student.parent.save()
+                return redirect("student_detail", student_id=student.id)
+        else:
+            return redirect("student_detail", student_id=student.id)
+
+    return render(request, "students/edit.html", {"student": student, "error": error})
 
 @login_required
 def student_delete(request, student_id):
