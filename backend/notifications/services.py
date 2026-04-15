@@ -4,7 +4,7 @@ from django.conf import settings
 
 
 async def send_message(telegram_id: int, text: str):
-    bot = Bot(token=settings.BOT_TOKEN)
+    bot = Bot(token="8725934017:AAHFOIn41bvQi51mwtVnggcKIi1gZTDPzAw")
     try:
         await bot.send_message(chat_id=telegram_id, text=text, parse_mode="HTML")
     finally:
