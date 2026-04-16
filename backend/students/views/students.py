@@ -46,10 +46,7 @@ def students_list(request):
 def student_create(request):
     if request.method == "POST":
         full_name = request.POST.get("full_name")
-        parent_name = request.POST.get("parent_name", "")
-        parent_phone = request.POST.get("parent_phone", "")
-        parent = Parent.objects.create(full_name=parent_name, phone=parent_phone)
-        Student.objects.create(full_name=full_name, parent=parent)
+        Student.objects.create(full_name=full_name, parent=None)
         return redirect("students_list")
     return render(request, "students/create.html")
 

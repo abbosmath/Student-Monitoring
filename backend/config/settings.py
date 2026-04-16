@@ -7,7 +7,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-me-in-production")
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = "8725934017:AAHFOIn41bvQi51mwtVnggcKIi1gZTDPzAw"
 WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")  # e.g. https://yourapp.railway.app
 
 DEBUG = os.getenv("DEBUG", "True") == "True"
