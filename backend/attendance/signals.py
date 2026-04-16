@@ -41,7 +41,7 @@ def send_attendance_notification(sender, instance, created, **kwargs):
     if instance.status == "present":
         emoji = "🟢"
         action = "qatnashdi"
-        extra = f"Dars {start} - {end} oralig'ida o'tkazildi.\n\nBiz sizning bilim olishdagi qat'iyatingiz va ishtiyoqingizni yuqori baholaymiz."
+        extra = f"Dars {start} - {end} oralig'ida o'tkazildi.\n\nBiz sizning farzandingizning bilim olishdagi qat'iyatini va ishtiyoqini yuqori baholaymiz."
     elif instance.status == "late":
         emoji = "🟡"
         action = "kechikib keldi"
