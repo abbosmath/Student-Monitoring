@@ -121,6 +121,12 @@ def give_points(request, student_id):
     if request.method == "POST":
         points = int(request.POST.get("points", 0))
         comment = request.POST.get("comment", "")
+
+        # Update total_points FIRST before creating Performance
+        student.total_points += points
+        student.save()
+
+        # Create Performance after save so signal reads correct total
         Performance.objects.create(
             student=student,
             points=points,
@@ -128,7 +134,5 @@ def give_points(request, student_id):
             date=date.today(),
             teacher=request.user.teacher,
         )
-        student.total_points += points
-        student.save()
         return redirect("student_detail", student_id=student.id)
     return render(request, "students/give_points.html", {"student": student})
