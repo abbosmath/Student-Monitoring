@@ -54,7 +54,7 @@ def send_attendance_notification(sender, instance, created, **kwargs):
     text = (
         f"{emoji} Hurmatli {parent.full_name.upper()},\n\n"
         f"Farzandingiz {student.full_name}\n"
-        f"📚 {group.name} fanidan\n"
+        f"📚 {group.name} kursidan\n"
         f"📅 {date_str} sanasidagi darsga {action}.\n"
         f"⏰ {extra}\n\n"
         f"Hurmat bilan,\n"
