@@ -2,11 +2,11 @@ import threading
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from students.models import Student, GroupMembership
+from students.services.stats import student_summary, get_period_range
 from users.models import Parent
 from datetime import date
-
-import threading
 
 def _send_linked_notification(telegram_id, student_name):
     try:
@@ -57,10 +57,19 @@ def student_detail(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     attendances = Attendance.objects.filter(student=student).order_by("-date")[:20]
     performances = Performance.objects.filter(student=student).order_by("-date")[:20]
+
+    # Personal stats for detail page
+    def _stats(period):
+        s, e = get_period_range(period)
+        return student_summary(student, s, e)
+
     return render(request, "students/detail.html", {
         "student": student,
         "attendances": attendances,
         "performances": performances,
+        "weekly_stats": _stats("weekly"),
+        "monthly_stats": _stats("monthly"),
+        "overall_stats": _stats("overall"),
     })
 
 
@@ -136,3 +145,36 @@ def give_points(request, student_id):
         )
         return redirect("student_detail", student_id=student.id)
     return render(request, "students/give_points.html", {"student": student})
+
+
+@login_required
+def deduct_points(request, student_id):
+    """Subtract points from a student (clamped to 0). Telegram notification fires via signal."""
+    from attendance.models import Performance
+    student = get_object_or_404(Student, id=student_id)
+    error = None
+    if request.method == "POST":
+        try:
+            amount = int(request.POST.get("amount", 0))
+        except (ValueError, TypeError):
+            amount = 0
+        comment = request.POST.get("comment", "").strip()
+        if amount <= 0:
+            error = "Ayiriladigan ball musbat son bo'lishi kerak."
+        else:
+            with transaction.atomic():
+                # Re-fetch with row lock for concurrency safety
+                student = Student.objects.select_for_update().get(pk=student_id)
+                actual_deduction = min(amount, student.total_points)  # clamp to 0
+                student.total_points -= actual_deduction
+                student.save(update_fields=["total_points"])
+                # Negative Performance record triggers existing signal → Telegram notification
+                Performance.objects.create(
+                    student=student,
+                    points=-actual_deduction,
+                    comment=comment,
+                    date=date.today(),
+                    teacher=request.user.teacher,
+                )
+            return redirect("student_detail", student_id=student.id)
+    return render(request, "students/deduct_points.html", {"student": student, "error": error})

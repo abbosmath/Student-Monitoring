@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %} — {{ group.name }} Statistikasi{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">📊 {{ group.name }}</h1>
+    <div style="color:#64748b;font-size:14px;margin-top:4px;">Guruh reytingi — {{ period_label }}</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    {% for p in periods %}
+    <a href="?period={{ p }}"
+       class="btn {% if period == p %}btn-primary{% else %}btn-ghost{% endif %}"
+       style="font-size:13px;padding:7px 14px;">
+      {{ period_labels|get_item:p }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Group filter links -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+  <span style="font-size:13px;color:#94a3b8;align-self:center;">Guruh:</span>
+  <a href="{% url 'stats_overview' %}?period={{ period }}"
+     class="btn btn-ghost" style="font-size:12px;padding:5px 12px;">Barchasi</a>
+  {% for g in groups %}
+  <a href="{% url 'stats_group' g.id %}?period={{ period }}"
+     class="btn {% if g.id == group.id %}btn-primary{% else %}btn-ghost{% endif %}"
+     style="font-size:12px;padding:5px 12px;">{{ g.name }}</a>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;font-weight:700;color:#1a202c;">
+    🏆 Reyting — {{ group.name }} ({{ period_label }})
+  </div>
+  {% if rows %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>O'quvchi</th>
+        <th>Ball</th>
+        <th>Keldi</th>
+        <th>Kechikdi</th>
+        <th>Kelmadi</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td>
+          {% if row.rank == 1 %}<span style="font-size:18px;">🥇</span>
+          {% elif row.rank == 2 %}<span style="font-size:18px;">🥈</span>
+          {% elif row.rank == 3 %}<span style="font-size:18px;">🥉</span>
+          {% else %}<span style="color:#94a3b8;font-weight:600;">{{ row.rank }}</span>{% endif %}
+        </td>
+        <td>
+          <a href="/students/{{ row.student.id }}/"
+             style="font-weight:600;color:#1a202c;text-decoration:none;">
+            {{ row.student.full_name }}
+          </a>
+        </td>
+        <td>
+          <span style="font-weight:700;color:{% if row.points >= 0 %}#6366f1{% else %}#ef4444{% endif %};">
+            {{ row.points }} ⭐
+          </span>
+        </td>
+        <td><span class="badge badge-present">{{ row.present }}</span></td>
+        <td><span class="badge badge-late">{{ row.late }}</span></td>
+        <td><span class="badge badge-absent">{{ row.absent }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div style="padding:48px;text-align:center;color:#94a3b8;">
+    Bu davr uchun ma'lumot yo'q.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

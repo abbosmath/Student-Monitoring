@@ -7,9 +7,10 @@
     {% if student.parent %}<div style="color:#64748b;font-size:14px;margin-top:4px;">Parent: {{ student.parent.full_name }}</div>{% endif %}
   </div>
   <div style="display:flex;gap:8px;">
-    <a href="/students/{{ student.id }}/points/" class="btn btn-warning">+ Give Points</a>
+    <a href="/students/{{ student.id }}/points/" class="btn btn-warning">+ Ball Berish</a>
+    <a href="/students/{{ student.id }}/deduct/" class="btn btn-danger">− Ball Ayirish</a>
     <a href="/students/{{ student.id }}/edit/" class="btn btn-ghost">Edit</a>
-    <a href="/students/{{ student.id }}/delete/" class="btn btn-danger">Delete</a>
+    <a href="/students/{{ student.id }}/delete/" class="btn btn-danger" style="background:#dc2626;">Delete</a>
   </div>
 </div>
 
@@ -70,7 +71,13 @@
         {% for p in performances %}
         <tr>
           <td style="font-weight:500;">{{ p.date }}</td>
-          <td><span style="font-weight:700;color:#6366f1;">+{{ p.points }}</span></td>
+          <td>
+            {% if p.points >= 0 %}
+              <span style="font-weight:700;color:#6366f1;">+{{ p.points }} ⭐</span>
+            {% else %}
+              <span style="font-weight:700;color:#ef4444;">{{ p.points }} ❌</span>
+            {% endif %}
+          </td>
           <td style="color:#64748b;">{{ p.comment|default:"—" }}</td>
         </tr>
         {% endfor %}
@@ -81,5 +88,76 @@
     {% endif %}
   </div>
 
+</div>
+
+<!-- Personal Statistics -->
+<div style="margin-top:28px;">
+  <div style="font-size:18px;font-weight:700;color:#1a202c;margin-bottom:16px;">📈 Shaxsiy Statistika</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+
+    <!-- Weekly -->
+    <div class="stat-card" style="border-top:3px solid #6366f1;">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#94a3b8;margin-bottom:12px;">Haftalik</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:#64748b;font-size:13px;">Ball</span>
+        <span style="font-weight:700;color:{% if weekly_stats.points >= 0 %}#6366f1{% else %}#ef4444{% endif %};">{{ weekly_stats.points }} ⭐</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:#64748b;font-size:13px;">Keldi</span>
+        <span style="font-weight:600;color:#10b981;">{{ weekly_stats.present }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:#64748b;font-size:13px;">Kechikdi</span>
+        <span style="font-weight:600;color:#f59e0b;">{{ weekly_stats.late }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:#64748b;font-size:13px;">Kelmadi</span>
+        <span style="font-weight:600;color:#ef4444;">{{ weekly_stats.absent }}</span>
+      </div>
+    </div>
+
+    <!-- Monthly -->
+    <div class="stat-card" style="border-top:3px solid #10b981;">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#94a3b8;margin-bottom:12px;">Oylik</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:#64748b;font-size:13px;">Ball</span>
+        <span style="font-weight:700;color:{% if monthly_stats.points >= 0 %}#6366f1{% else %}#ef4444{% endif %};">{{ monthly_stats.points }} ⭐</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:#64748b;font-size:13px;">Keldi</span>
+        <span style="font-weight:600;color:#10b981;">{{ monthly_stats.present }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:#64748b;font-size:13px;">Kechikdi</span>
+        <span style="font-weight:600;color:#f59e0b;">{{ monthly_stats.late }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:#64748b;font-size:13px;">Kelmadi</span>
+        <span style="font-weight:600;color:#ef4444;">{{ monthly_stats.absent }}</span>
+      </div>
+    </div>
+
+    <!-- Overall -->
+    <div class="stat-card" style="border-top:3px solid #f59e0b;">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#94a3b8;margin-bottom:12px;">Umumiy</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:#64748b;font-size:13px;">Ball</span>
+        <span style="font-weight:700;color:{% if overall_stats.points >= 0 %}#6366f1{% else %}#ef4444{% endif %};">{{ overall_stats.points }} ⭐</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:#64748b;font-size:13px;">Keldi</span>
+        <span style="font-weight:600;color:#10b981;">{{ overall_stats.present }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:#64748b;font-size:13px;">Kechikdi</span>
+        <span style="font-weight:600;color:#f59e0b;">{{ overall_stats.late }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:#64748b;font-size:13px;">Kelmadi</span>
+        <span style="font-weight:600;color:#ef4444;">{{ overall_stats.absent }}</span>
+      </div>
+    </div>
+
+  </div>
 </div>
 {% endblock %}

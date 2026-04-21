@@ -74,16 +74,30 @@ def send_points_notification(sender, instance, created, **kwargs):
         return
 
     teacher_name = instance.teacher.full_name if instance.teacher else "O'qituvchi"
-    comment_line = f"\n💬 Izoh: {instance.comment}" if instance.comment else ""
+    comment_line = f"\n💬 Sabab: {instance.comment}" if instance.comment else ""
 
-    text = (
-        f"⭐ Hurmatli {parent.full_name.upper()},\n\n"
-        f"Farzandingiz {student.full_name}\n"
-        f"📅 {instance.date} sanasida\n"
-        f"🏆 <b>{instance.points} ball</b> oldi!{comment_line}\n\n"
-        f"Jami ball: <b>{student.total_points}</b>\n\n"
-        f"Hurmat bilan,\n"
-        f"Fan mentori {teacher_name}"
-    )
+    if instance.points >= 0:
+        # Points awarded
+        text = (
+            f"⭐ Hurmatli {parent.full_name.upper()},\n\n"
+            f"Farzandingiz <b>{student.full_name}</b>\n"
+            f"📅 {instance.date} sanasida\n"
+            f"🏆 <b>+{instance.points} ball</b> oldi!{comment_line}\n\n"
+            f"Jami ball: <b>{student.total_points}</b> ⭐\n\n"
+            f"Hurmat bilan,\n"
+            f"Fan mentori {teacher_name}"
+        )
+    else:
+        # Points deducted
+        deducted = abs(instance.points)
+        text = (
+            f"❌ Hurmatli {parent.full_name.upper()},\n\n"
+            f"Farzandingiz <b>{student.full_name}</b>\n"
+            f"📅 {instance.date} sanasida\n"
+            f"<b>−{deducted} ball</b> ayirildi.{comment_line}\n\n"
+            f"Joriy jami ball: <b>{student.total_points}</b> ⭐\n\n"
+            f"Hurmat bilan,\n"
+            f"Fan mentori {teacher_name}"
+        )
 
     threading.Thread(target=_notify, args=(parent.telegram_id, text), daemon=True).start()

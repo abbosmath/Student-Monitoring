@@ -8,6 +8,7 @@ from students.views.groups import (
     add_student_to_group,
     remove_student_from_group,
 )
+from students.views.stats import stats_overview, stats_group
 
 urlpatterns = [
     path("", groups_list, name="groups_list"),
@@ -17,4 +18,6 @@ urlpatterns = [
     path("<int:group_id>/delete/", group_delete, name="group_delete"),
     path("<int:group_id>/add-student/", add_student_to_group, name="add_student_to_group"),
     path("<int:group_id>/remove-student/<int:student_id>/", remove_student_from_group, name="remove_student_from_group"),
+    path("stats/", stats_overview, name="stats_overview"),
+    path("stats/<int:group_id>/", stats_group, name="stats_group"),
 ]

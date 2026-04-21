@@ -20,8 +20,10 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from asgiref.sync import sync_to_async
 from users.models import Parent
+from students.services.stats import student_summary, get_period_range
 import os
 
 load_dotenv()
@@ -48,6 +50,15 @@ def get_parent_children(telegram_id):
         return None, []
 
 
+# -- Inline keyboard for easy access --
+def get_main_keyboard():
+    kb = [
+        [KeyboardButton(text="📊 Statistika")],
+        [KeyboardButton(text="/mystudents")]
+    ]
+    return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+
+
 @dp.message(Command("start"))
 async def cmd_start(message: Message):
     telegram_id = message.from_user.id
@@ -69,7 +80,7 @@ async def cmd_start(message: Message):
             f"🪪 <b>Sizning Telegram ID:</b> <code>{telegram_id}</code>"
         )
 
-    await message.answer(text, parse_mode="HTML")
+    await message.answer(text, parse_mode="HTML", reply_markup=get_main_keyboard())
 
 
 @dp.message(Command("id"))
@@ -104,7 +115,43 @@ async def cmd_mystudents(message: Message):
     for child in children:
         lines.append(f"• <b>{child.full_name}</b> — {child.total_points} ball ⭐")
 
-    await message.answer("\n".join(lines), parse_mode="HTML")
+    await message.answer("\n".join(lines), parse_mode="HTML", reply_markup=get_main_keyboard())
+
+
+@sync_to_async
+def get_stats_for_parent(telegram_id):
+    try:
+        parent = Parent.objects.get(telegram_id=telegram_id)
+        children = list(parent.children.all())
+        if not children:
+            return None, "ℹ️ Hali farzand bog'lanmagan."
+
+        response_lines = ["📊 <b>STATISTIKA</b>\n"]
+        for child in children:
+            response_lines.append(f"🧑 <b>{child.full_name}</b>\n")
+
+            for period, label in [("monthly", "Oylik"), ("weekly", "Haftalik"), ("overall", "Umumiy")]:
+                start, end = get_period_range(period)
+                stats = student_summary(child, start, end)
+
+                score_emoji = "⭐" if stats["points"] >= 0 else "❌"
+                response_lines.append(
+                    f"🔹 <i>{label}</i>:\n"
+                    f"   Ball: <b>{stats['points']} {score_emoji}</b>\n"
+                    f"   Keldi: <b>{stats['present']}</b> marta\n"
+                    f"   Kelmadi: <b>{stats['absent']}</b> marta\n"
+                )
+
+        return parent, "\n".join(response_lines)
+    except Parent.DoesNotExist:
+        return None, "❌ Siz tizimda ro'yxatdan o'tmagansiz.\n/start buyrug'ini yuboring."
+
+
+@dp.message(Command("stats"))
+@dp.message(lambda msg: msg.text == "📊 Statistika")
+async def cmd_stats(message: Message):
+    parent, text = await get_stats_for_parent(message.from_user.id)
+    await message.answer(text, parse_mode="HTML", reply_markup=get_main_keyboard())
 
 
 @dp.message(Command("help"))
@@ -114,6 +161,7 @@ async def cmd_help(message: Message):
         "/start — Tizimga ulanish\n"
         "/id — Telegram ID-ingizni ko'rish\n"
         "/mystudents — Farzandlaringizni ko'rish\n"
+        "/stats — 📊 Statistika ko'rish\n"
         "/help — Yordam",
         parse_mode="HTML",
     )
