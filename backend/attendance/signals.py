@@ -58,29 +58,33 @@ def send_attendance_notification(sender, instance, created, **kwargs):
             date__lte=instance.date,
         ).count()
 
+        allowed_absences = 3
+        remaining = max(0, allowed_absences - current_month_absents)
+        lessons_in_month = 12
+
         if current_month_absents == 1:
             extra = (
-                "Bu oyda birinchi marta darsga kelmadi. "
-                "Sizga bu oyda yana 2 marta absensiya ruxsat etiladi. "
-                "Agar sababini bilsangiz, iltimos, o'qituvchi bilan muhokama qiling."
+                f"Bu oyda {lessons_in_month} dars rejalashtirilgan va farzandingiz birinchi marta kelmadi. "
+                f"Oy boshida 3 ta absensiya ruxsat etiladi, hozir yana {remaining} ta absensiya qoldi. "
+                "Iltimos, sababini o'qituvchi bilan muhokama qiling."
             )
         elif current_month_absents == 2:
             extra = (
-                "Bu oyda ikkinchi marta darsga kelmadi. "
-                "Sizga bu oyda yana 1 marta absensiya ruxsat etiladi. "
+                f"Bu oyda {lessons_in_month} dars ichida ikkinchi marta kelmadi. "
+                f"Oy boshidan beri 3 ta absensiya ruxsat etilgan, hozir yana {remaining} ta qoldi. "
                 "Iltimos, bu masalani o'qituvchi bilan darhol muhokama qiling."
             )
         elif current_month_absents == 3:
             extra = (
-                "Bu oyda uchinchi marta darsga kelmadi. "
+                f"Bu oyda {lessons_in_month} dars ichida uchinchi marta kelmadi. "
                 "Endi bu oyda qo'shimcha absensiya ruxsat etilmaydi. "
                 "Agar yana bir bor kelmasa, darsga qatnashishiga ta'sir ko'rsatishi mumkin. "
                 "Iltimos, bu masalani o'qituvchi bilan darhol muhokama qiling."
             )
         else:
             extra = (
-                "Bu oyda farzandingiz 4-marta darsga kelmadi. "
-                "Afsuski, bu undan keyingi darslarda qatnashishiga ta'sir ko'rsatishi mumkin. "
+                f"Bu oyda {lessons_in_month} dars ichida {current_month_absents} marta kelmadi. "
+                "Sizning farzandingiz uchun darslarda qatnashish endi ruxsat etilmaydi. "
                 "Iltimos, bu masalani o'qituvchi bilan darhol muhokama qiling."
             )
 
