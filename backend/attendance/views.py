@@ -29,7 +29,13 @@ def take_attendance(request, group_id):
             # Signal fires on create only; manually trigger notification on update too
             if not created:
                 from attendance.signals import send_attendance_notification
-                send_attendance_notification(Attendance, obj, created=False, update_fields=None)
+                send_attendance_notification(
+                    Attendance,
+                    obj,
+                    created=False,
+                    update_fields=None,
+                    notify_on_update=True,
+                )
 
         return redirect("group_detail", group_id=group_id)
 

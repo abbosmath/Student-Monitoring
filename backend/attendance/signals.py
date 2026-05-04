@@ -18,7 +18,7 @@ def _notify(telegram_id, text):
 
 @receiver(post_save, sender=Attendance)
 def send_attendance_notification(sender, instance, created, **kwargs):
-    if not created:
+    if not created and not kwargs.get("notify_on_update", False):
         return
     student = instance.student
     parent = student.parent
@@ -49,7 +49,40 @@ def send_attendance_notification(sender, instance, created, **kwargs):
     else:
         emoji = "🔴"
         action = "qatnashmadi"
-        extra = "Iltimos, sababini o'qituvchi bilan muhokama qiling."
+
+        month_start = instance.date.replace(day=1)
+        current_month_absents = Attendance.objects.filter(
+            student=student,
+            status="absent",
+            date__gte=month_start,
+            date__lte=instance.date,
+        ).count()
+
+        if current_month_absents == 1:
+            extra = (
+                "Bu oyda birinchi marta darsga kelmadi. "
+                "Sizga bu oyda yana 2 marta absensiya ruxsat etiladi. "
+                "Agar sababini bilsangiz, iltimos, o'qituvchi bilan muhokama qiling."
+            )
+        elif current_month_absents == 2:
+            extra = (
+                "Bu oyda ikkinchi marta darsga kelmadi. "
+                "Sizga bu oyda yana 1 marta absensiya ruxsat etiladi. "
+                "Iltimos, bu masalani o'qituvchi bilan darhol muhokama qiling."
+            )
+        elif current_month_absents == 3:
+            extra = (
+                "Bu oyda uchinchi marta darsga kelmadi. "
+                "Endi bu oyda qo'shimcha absensiya ruxsat etilmaydi. "
+                "Agar yana bir bor kelmasa, darsga qatnashishiga ta'sir ko'rsatishi mumkin. "
+                "Iltimos, bu masalani o'qituvchi bilan darhol muhokama qiling."
+            )
+        else:
+            extra = (
+                "Bu oyda farzandingiz 4-marta darsga kelmadi. "
+                "Afsuski, bu undan keyingi darslarda qatnashishiga ta'sir ko'rsatishi mumkin. "
+                "Iltimos, bu masalani o'qituvchi bilan darhol muhokama qiling."
+            )
 
     text = (
         f"{emoji} Hurmatli {parent.full_name.upper()},\n\n"
