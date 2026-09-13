@@ -22,7 +22,20 @@ from aiogram.filters import Command, or_f
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from asgiref.sync import sync_to_async
-from django.db import transaction
+from django.db import transaction, close_old_connections
+
+def sync_db_action(func):
+    def wrapper(*args, **kwargs):
+        close_old_connections()
+        try:
+            return func(*args, **kwargs)
+        finally:
+            close_old_connections()
+    return wrapper
+
+def sync_to_async_db(func):
+    return sync_to_async(sync_db_action(func))
+
 import time
 from datetime import date
 from users.models import Parent
@@ -52,7 +65,7 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
 
-@sync_to_async
+@sync_to_async_db
 def get_or_create_parent(telegram_id, full_name):
     return Parent.objects.get_or_create(
         telegram_id=telegram_id,
@@ -60,7 +73,7 @@ def get_or_create_parent(telegram_id, full_name):
     )
 
 
-@sync_to_async
+@sync_to_async_db
 def get_parent_children(telegram_id):
     try:
         parent = Parent.objects.get(telegram_id=telegram_id)
@@ -86,7 +99,7 @@ def get_main_keyboard():
 USER_TEST_SESSIONS = {}
 
 
-@sync_to_async
+@sync_to_async_db
 def get_available_tests_for_parent(telegram_id):
     try:
         parent = Parent.objects.get(telegram_id=telegram_id)
@@ -130,7 +143,7 @@ def get_full_question_image_url(q):
     return f"{domain.rstrip('/')}{url}"
 
 
-@sync_to_async
+@sync_to_async_db
 def load_test_details(test_id, child_id):
     try:
         test = Test.objects.get(pk=test_id)
@@ -164,7 +177,7 @@ def load_test_details(test_id, child_id):
         return None, None, f"❌ Xatolik: {str(e)}"
 
 
-@sync_to_async
+@sync_to_async_db
 def complete_test_submission(student_id, test_id, score, total_questions):
     try:
         with transaction.atomic():
@@ -501,7 +514,7 @@ async def cmd_mystudents(message: Message):
     await message.answer("\n".join(lines), parse_mode="HTML", reply_markup=get_main_keyboard())
 
 
-@sync_to_async
+@sync_to_async_db
 def get_stats_for_parent(telegram_id):
     try:
         parent = Parent.objects.get(telegram_id=telegram_id)
@@ -538,7 +551,7 @@ async def cmd_stats(message: Message):
 
 # -- MARKET / DO'KON FUNCTIONS --
 
-@sync_to_async
+@sync_to_async_db
 def get_market_data_for_parent(telegram_id):
     try:
         parent = Parent.objects.get(telegram_id=telegram_id)
@@ -553,7 +566,7 @@ def get_market_data_for_parent(telegram_id):
         return None, [], [], "❌ Siz tizimda ro'yxatdan o'tmagansiz.\n/start buyrug'ini yuboring."
 
 
-@sync_to_async
+@sync_to_async_db
 def process_market_purchase(telegram_id, item_id, child_id):
     try:
         parent = Parent.objects.get(telegram_id=telegram_id)
@@ -703,7 +716,7 @@ async def process_buy_callback(callback_query: CallbackQuery):
     await callback_query.message.answer(msg, parse_mode="HTML", reply_markup=get_main_keyboard())
 
 
-@sync_to_async
+@sync_to_async_db
 def get_group_leaderboard_for_parent(telegram_id):
     try:
         parent = Parent.objects.get(telegram_id=telegram_id)
